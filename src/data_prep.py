@@ -10,8 +10,19 @@ import os
 import random
 import argparse
 import torch
+import numpy as np
 from tqdm import tqdm
 from typing import List, Tuple, Dict, Optional
+from collections import defaultdict
+import re
+import nltk
+from nltk.metrics import edit_distance
+
+try:
+    from metaphone import doublemetaphone
+except ImportError:
+    print("Double Metaphone not available. Install with: pip install metaphone")
+    doublemetaphone = None
 
 def load_clean_corpus(filepath: str) -> List[str]:
     """

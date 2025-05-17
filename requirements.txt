@@ -18,3 +18,5 @@ uvicorn
 python-Levenshtein
 flask
 pytest
+metaphone
+nltk

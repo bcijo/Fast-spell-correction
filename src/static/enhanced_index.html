@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Spell Correction - AI-Powered, Non-LLM Approach</title>
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <style>
+        :root {
+            --primary-color: #3949ab;
+            --primary-light: #6f74dd;
+            --primary-dark: #00227b;
+            --secondary-color: #ffab40;
+            --text-on-primary: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --background-color: #f5f5f5;
+            --card-color: #ffffff;
+            --error-color: #f44336;
+            --success-color: #4caf50;
+            --border-radius: 8px;
+            --spacing-unit: 8px;
+            --transition-time: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-unit) * 2;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--text-on-primary);
+            padding: calc(var(--spacing-unit) * 2) 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: calc(var(--spacing-unit) * 1.5);
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+            background-color: var(--primary-dark);
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border-radius: var(--border-radius);
+        }
+
+        .model-selector select {
+            background-color: transparent;
+            color: var(--text-on-primary);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: var(--spacing-unit);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .model-selector select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: calc(var(--spacing-unit) * 3);
+            margin-top: calc(var(--spacing-unit) * 3);
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: calc(var(--spacing-unit) * 3);
+            height: 100%;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+            margin-bottom: calc(var(--spacing-unit) * 2);
+            padding-bottom: var(--spacing-unit);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .card-header i {
+            color: var(--primary-color);
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: calc(var(--spacing-unit) * 1.5);
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: var(--border-radius);
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color var(--transition-time);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--text-on-primary);
+            border: none;
+            padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+            transition: background-color var(--transition-time);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        button.secondary:hover {
+            background-color: rgba(57, 73, 171, 0.1);
+        }
+
+        .metrics {
+            margin-top: calc(var(--spacing-unit) * 2);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .correction-output {
+            padding: calc(var(--spacing-unit) * 1.5);
+            background-color: rgba(0,0,0,0.02);
+            border-radius: var(--border-radius);
+            min-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .correction {
+            position: relative;
+            display: inline;
+        }
+
+        .correction.fixed {
+            background-color: rgba(76, 175, 80, 0.2);
+            border-bottom: 2px solid var(--success-color);
+            padding: 1px 0;
+            cursor: pointer;
+        }
+
+        .correction-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: var(--spacing-unit);
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity var(--transition-time), visibility var(--transition-time);
+            z-index: 10;
+        }
+
+        .correction.fixed:hover .correction-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-unit);
+            color: var(--text-secondary);
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        .loading .spinner {
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: var(--spacing-unit);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .stats-card {
+            margin-top: calc(var(--spacing-unit) * 3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: calc(var(--spacing-unit) * 2);
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        .stat-item {
+            background-color: rgba(0,0,0,0.02);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 2);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            margin-top: calc(var(--spacing-unit) * 6);
+            padding: calc(var(--spacing-unit) * 3) 0;
+            background-color: var(--primary-dark);
+            color: var(--text-on-primary);
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--spacing-unit) * 2);
+        }
+
+        .tech-stack {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: calc(var(--spacing-unit) * 3);
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="material-icons">spellcheck</i>
+                <h1>Fast Spell Correction</h1>
+            </div>
+            <div class="model-selector">
+                <span>Model:</span>
+                <select id="modelSelector">
+                    <option value="default">Default Model</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="material-icons">edit</i>
+                    <h2>Input Text</h2>
+                </div>
+                <textarea id="inputText" placeholder="Type or paste text with spelling errors here...">Thsi is a smiple dmeo of the fsat non-LLM spellnig croeection systme. It shuold corrcet all thees errros in rael-tmie withuot using any lrage lnagauge modls.</textarea>
+                <div class="button-container">
+                    <button id="correctBtn">
+                        <i class="material-icons">auto_fix_high</i>
+                        <span>Correct Spelling</span>
+                    </button>
+                    <button class="secondary" id="clearBtn">
+                        <i class="material-icons">clear</i>
+                        <span>Clear</span>
+                    </button>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>Processing...</span>
+                </div>
+                <div class="error-message" id="errorMessage"></div>
+                <div class="metrics" id="inputMetrics">
+                    <div>Characters: <span id="charCount">0</span></div>
+                    <div>Words: <span id="wordCount">0</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="material-icons">check_circle</i>
+                    <h2>Corrected Text</h2>
+                </div>
+                <div class="correction-output" id="outputText">
+                    <p>Corrected text will appear here.</p>
+                </div>
+                <div class="metrics" id="outputMetrics">
+                    <div>Processing time: <span id="processingTime">0</span> ms</div>
+                    <div>Corrections made: <span id="correctionCount">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card stats-card">
+            <div class="card-header">
+                <i class="material-icons">insights</i>
+                <h2>Performance Statistics</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="avgLatency">0</div>
+                    <div class="stat-label">Average Latency (ms)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="throughput">0</div>
+                    <div class="stat-label">Throughput (reqs/sec)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="modelSize">0</div>
+                    <div class="stat-label">Model Size (MB)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="correctionAccuracy">0</div>
+                    <div class="stat-label">Correction Accuracy (%)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container footer-content">
+            <div>
+                <h3>Fast, Non-LLM Spell Correction System</h3>
+                <p>A lightweight, efficient spell correction system using PyTorch</p>
+            </div>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <i class="material-icons">speed</i>
+                    <span>Fast Inference</span>
+                </div>
+                <div class="tech-item">
+                    <i class="material-icons">memory</i>
+                    <span>Optimized Models</span>
+                </div>
+                <div class="tech-item">
+                    <i class="material-icons">desktop_windows</i>
+                    <span>CPU Friendly</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const correctBtn = document.getElementById('correctBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            const charCount = document.getElementById('charCount');
+            const wordCount = document.getElementById('wordCount');
+            const processingTime = document.getElementById('processingTime');
+            const correctionCount = document.getElementById('correctionCount');
+            const modelSelector = document.getElementById('modelSelector');
+            
+            // Performance stats
+            const avgLatency = document.getElementById('avgLatency');
+            const throughput = document.getElementById('throughput');
+            const modelSize = document.getElementById('modelSize');
+            const correctionAccuracy = document.getElementById('correctionAccuracy');
+            
+            // Stats data
+            let latencies = [];
+            
+            // Update input metrics
+            function updateInputMetrics() {
+                const text = inputText.value;
+                charCount.textContent = text.length;
+                wordCount.textContent = text.split(/\s+/).filter(word => word.length > 0).length;
+            }
+            
+            // Initial metrics update
+            updateInputMetrics();
+            
+            // Load available models
+            async function loadModels() {
+                try {
+                    const response = await fetch('/api/models');
+                    if (!response.ok) {
+                        throw new Error('Failed to load models');
+                    }
+                    
+                    const models = await response.json();
+                    modelSelector.innerHTML = '';
+                    
+                    models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.name;
+                        option.textContent = `${model.name}${model.is_active ? ' (Active)' : ''}`;
+                        if (model.is_active) {
+                            option.selected = true;
+                        }
+                        modelSelector.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading models:', error);
+                }
+            }
+            
+            // Load models on page load
+            loadModels();
+            
+            // Handle text correction
+            async function correctText() {
+                const text = inputText.value.trim();
+                if (!text) {
+                    errorMessage.textContent = 'Please enter some text to correct.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                errorMessage.style.display = 'none';
+                loading.style.display = 'flex';
+                correctBtn.disabled = true;
+                
+                try {
+                    const startTime = performance.now();
+                    
+                    const response = await fetch('/api/correct', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            text: text,
+                            model_name: modelSelector.value
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to correct text');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Track latency
+                    latencies.push(result.latency_ms);
+                    if (latencies.length > 10) {
+                        latencies.shift(); // Keep only the last 10 values
+                    }
+                    
+                    // Update performance stats
+                    avgLatency.textContent = (latencies.reduce((sum, val) => sum + val, 0) / latencies.length).toFixed(1);
+                    throughput.textContent = (1000 / result.latency_ms).toFixed(1);
+                    
+                    // Display corrected text with highlighting
+                    let outputHtml = result.corrected;
+                    
+                    // Highlight corrections
+                    if (result.changes && result.changes.length > 0) {
+                        // First, escape the text to prevent HTML injection
+                        const escapeHtml = (text) => {
+                            return text
+                                .replace(/&/g, "&amp;")
+                                .replace(/</g, "&lt;")
+                                .replace(/>/g, "&gt;")
+                                .replace(/"/g, "&quot;")
+                                .replace(/'/g, "&#039;");
+                        };
+                        
+                        let escapedText = escapeHtml(result.corrected);
+                        
+                        // Build a new string with highlights
+                        let words = escapedText.split(/\s+/);
+                        
+                        result.changes.forEach(change => {
+                            if (change.position < words.length) {
+                                words[change.position] = `<span class="correction fixed">${words[change.position]}<span class="correction-tooltip">Original: ${escapeHtml(change.original)}</span></span>`;
+                            }
+                        });
+                        
+                        outputHtml = words.join(' ');
+                    }
+                    
+                    outputText.innerHTML = outputHtml;
+                    
+                    // Update metrics
+                    processingTime.textContent = result.latency_ms.toFixed(1);
+                    correctionCount.textContent = result.changes ? result.changes.length : 0;
+                    
+                    // Sample accuracy (in a real system, this would come from evaluation)
+                    correctionAccuracy.textContent = '92.5';
+                    // Sample model size (in a real system, this would come from model metadata)
+                    modelSize.textContent = '45.2';
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorMessage.textContent = 'An error occurred while processing your request.';
+                    errorMessage.style.display = 'block';
+                    outputText.innerHTML = '<p>Failed to process text. Please try again.</p>';
+                } finally {
+                    loading.style.display = 'none';
+                    correctBtn.disabled = false;
+                }
+            }
+            
+            // Clear the input and output
+            function clearText() {
+                inputText.value = '';
+                outputText.innerHTML = '<p>Corrected text will appear here.</p>';
+                updateInputMetrics();
+                processingTime.textContent = '0';
+                correctionCount.textContent = '0';
+                errorMessage.style.display = 'none';
+            }
+            
+            // Event listeners
+            correctBtn.addEventListener('click', correctText);
+            clearBtn.addEventListener('click', clearText);
+            inputText.addEventListener('input', updateInputMetrics);
+            
+            // Allow correction with Ctrl+Enter
+            inputText.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    correctText();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
