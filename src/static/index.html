@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Spell Correction Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .container {
+            margin-top: 30px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+        }
+        
+        .highlight {
+            background-color: #ffeb3b;
+            padding: 0 3px;
+        }
+        
+        .stats {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fast Spell Correction Demo</h1>
+    
+    <div class="container">
+        <p>Type or paste text with spelling errors below, and the system will correct it in real-time.</p>
+        
+        <textarea id="inputText" placeholder="Enter text with spelling errors here...">Thsi is a smiple dmeo of the fsat non-LLM spellnig croeection systme. It shuold corrcet all thees errros in rael-tmie.</textarea>
+        
+        <button id="correctBtn">Correct Spelling</button>
+        
+        <div class="result" id="result">
+            <p>Corrected text will appear here...</p>
+        </div>
+        
+        <div class="stats" id="stats"></div>
+    </div>
+    
+    <footer>
+        <p>Fast, Non-LLM Spell Correction System | Powered by PyTorch</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const correctBtn = document.getElementById('correctBtn');
+            const inputText = document.getElementById('inputText');
+            const result = document.getElementById('result');
+            const stats = document.getElementById('stats');
+            
+            // API endpoint (adjust as needed)
+            const API_URL = '/correct';
+            
+            correctBtn.addEventListener('click', async function() {
+                const text = inputText.value.trim();
+                
+                if (!text) {
+                    result.innerHTML = '<p>Please enter some text to correct.</p>';
+                    return;
+                }
+                
+                // Show loading state
+                correctBtn.disabled = true;
+                correctBtn.textContent = 'Correcting...';
+                result.innerHTML = '<p>Processing...</p>';
+                stats.textContent = '';
+                
+                try {
+                    const startTime = performance.now();
+                    
+                    // Make API request
+                    const response = await fetch(`${API_URL}?text=${encodeURIComponent(text)}`);
+                    const data = await response.json();
+                    
+                    const endTime = performance.now();
+                    const totalTime = endTime - startTime;
+                    
+                    // Show result
+                    if (data.corrected) {
+                        // Highlight differences between original and corrected text
+                        const originalWords = text.split(' ');
+                        const correctedWords = data.corrected.split(' ');
+                        
+                        let resultHTML = '<p>';
+                        
+                        // Use the shorter length to avoid issues
+                        const len = Math.min(originalWords.length, correctedWords.length);
+                        
+                        for (let i = 0; i < len; i++) {
+                            if (originalWords[i] !== correctedWords[i]) {
+                                resultHTML += `<span class="highlight">${correctedWords[i]}</span> `;
+                            } else {
+                                resultHTML += correctedWords[i] + ' ';
+                            }
+                        }
+                        
+                        // Add any remaining words
+                        if (correctedWords.length > len) {
+                            for (let i = len; i < correctedWords.length; i++) {
+                                resultHTML += correctedWords[i] + ' ';
+                            }
+                        }
+                        
+                        resultHTML += '</p>';
+                        result.innerHTML = resultHTML;
+                        
+                        // Show stats
+                        stats.textContent = `API Latency: ${data.latency_ms.toFixed(2)}ms | Total Time (including network): ${totalTime.toFixed(2)}ms`;
+                    } else {
+                        result.innerHTML = '<p>Error: Could not process the text</p>';
+                    }
+                } catch (error) {
+                    console.error(error);
+                    result.innerHTML = '<p>Error: Could not connect to the API</p>';
+                } finally {
+                    // Reset button state
+                    correctBtn.disabled = false;
+                    correctBtn.textContent = 'Correct Spelling';
+                }
+            });
+            
+            // Optional: Auto-correct on input change with debounce
+            let debounceTimer;
+            inputText.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function() {
+                    if (inputText.value.trim().length > 10) {
+                        correctBtn.click();
+                    }
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>

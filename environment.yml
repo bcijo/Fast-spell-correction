@@ -1,0 +1,30 @@
+name: fast_spell
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.3
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - tqdm
+  - pip:
+    - transformers
+    - datasets
+    - sacrebleu
+    - sacremetrics
+    - sentencepiece
+    - torchtext
+    - torchdata
+    - python-Levenshtein
+    - fastapi
+    - uvicorn
+    - flask
